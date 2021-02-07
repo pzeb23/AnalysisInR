@@ -1,11 +1,12 @@
 ---
-title: "Modele parametyczne - projekt"
-author: "Piotr Zebrowski & Michał Wierucki"
+title: "Modele nieparametyczne - projekt"
+author: "Piotr Żebrowski & Michał Wierucki"
 date: "2/7/2021"
 output: html_document
 ---
 ```{r include=FALSE}
 source("BankChurnersModel.R")
+source("/Users/imac/Projects/AnalysisInR/projekt_Michal_Wierucki_Piotr_Zeborwski_Model_GAM.r")
 ```
 
 ---
@@ -43,7 +44,7 @@ Zbiór danych zawiera klientów kart kredytowych oraz ich cechy:
  
 - Total_Revolving_Bal: całkowity obrót na karcie kredytowej, zmienna ilościowa 
  
-- Avg_Open_To_Buy: ? 
+- Avg_Open_To_Buy: średnie otwarcie linii kredytowych, zmienna ilościowa
  
 - Total_Amt_Chng_Q4_Q1: Zmiana w kwotach transakcji, od 4. do 1. kwartału, zmienna ilościowa 
  
@@ -78,7 +79,7 @@ rpart.plot(drzewo.churners0)
 
 #### Opis
 
-*W drzewie klasyfikacji możemy zaobserwować prawidłowość klasyfikowania klienta na podstawie łącznej liczby transakcji (Total_Trans_Ct). Następne w kolejności, zmiennymi najlepiej dysryminującymi są "Łączna kwota transakcji" (Total_Trans_Amt) oraz "Łączna kwota transakcji" (Total_Trans_Amt). *
+*W drzewie klasyfikacji możemy zaobserwować prawidłowość klasyfikowania klienta na podstawie łącznej liczby transakcji (Total_Trans_Ct). Następne w kolejności, zmiennymi najlepiej dyskryminującymi są "Łączna kwota transakcji" (Total_Trans_Amt) oraz "Łączna kwota transakcji" (Total_Trans_Amt). *
 
 
 #### Podział zbioru na uczący i testowy
@@ -100,13 +101,13 @@ drzewo.churners1 <- rpart(Attrition_Flag ~ .,
                          control = rpart.control(cp = 0))
 ```
 
-*Początkowo drzewo zostało wytworzone z zargumentem cp = 0, następnie poprawność argumentu została zweryfikowana za pomocą funkcji prezentującej wykres cp w naszym modelu drzewa.*
+*Początkowo drzewo zostało wytworzone z argumentem cp = 0, a następnie poprawność argumentu została zweryfikowana za pomocą funkcji prezentującej wykres cp w naszym modelu drzewa.*
 
 ``` {r echo = FALSE, results = 'asis'}
 plotcp(drzewo.churners1)
 ```
 
-*Wykres informuje nas, że wskazany wczesniej parametr cp pownien być delikatnie większy. Jego wartość ustalono na 0.005 w dalszych częściach analizy. Porównawczo poniżej zostały przedstawione dwa rysunki drzewa w zależności od wartości parametru cp.*
+*Wykres informuje nas, że wskazany wczesniej parametr cp pownien być delikatnie większy. Jego wartość ustalono na 0.005 w dalszych częściach analizy. Poniżej zostały przedstawione dwa rysunki drzewa w zależności od wartości parametru cp.*
 
 #### Drzewo dla cp=0:
 
@@ -150,6 +151,8 @@ predykcje.klasy <- predict(drzewo.churners2, newdata = churners.testowy,
 mean(predykcje.klasy != churners.testowy$Attrition_Flag)
 ```
 
+*Błąd klasyfikacji na poziomie 0.06124062 oznacza, że w przeważającej większości przypadków klasyfikacja poszczególnych klientów do grup została przeprowadzona poprawnie.*
+
 #### Histogram błędnych klasyfikacji
 ``` {r echo = FALSE, results = 'asis'}
 predykcje.prob <- predict(drzewo.churners3, newdata = churners.testowy,
@@ -158,11 +161,128 @@ hist(predykcje.prob[churners.testowy$Attrition_Flag == "Attrited Customer",
                     "Attrited Customer"])
 ```
 
-*Błąd klasyfikacji na poziomie 0.06124062 oznacza, że w przeważającej większości przypadków klasyfikacja poszczególnych klientów do grup została przeprowadzona poprawnie.*
+
+*Na histogramie widać rozkład klasyfikacji w zależności od wskazań predykcji. Co ciekawe, częsciej błednie klasyfikowane były wartości dla wskazań predyktora bliskich zeru, niż dla wskazań predyktora równych 0.2 oraz 0.3. Najczęściej poprawnie zostały zklasyfikowane wartości dla wskazań predyktora 0.8-0.9.*
 
 
+# Wpływ pojemności silnika i wielkości spalania w l/100km na wielkość emisji CO2/g/km
 
-# Wpływ spalania i wielkości silnika na emisję CO2
+Zbiór danych użyty do modelowania znajduje się na https://www.kaggle.com/debajyotipodder/co2-emission-by-vehicles.
+
+Kolumny użyte do modelu:
+
+- Emisja CO2 g/km
+- Pojemność silnika w litrach
+- Zużycie paliwa w cyklu mieszanym w litrach na 100 km
+
+``` {r echo = FALSE, results = 'asis'}
+library(knitr)
+keeps <- c("CO2.Emissions.g.km.", "Engine.Size.L.", "Fuel.Consumption.Comb..L.100.km.")
+DF<- data.frame(emissions)
+kable(head(DF[keeps]))
+```
+
+#### Oszacowanie modelu (model 1) z wygładzonymi zmiennymi wyjaśniającego wpływ pojemności silnika i wielkości spalania w l/100km na wielkość emisji CO2/g/km
+
+````{r echo = TRUE}
+model1 <-  gam(CO2.Emissions.g.km.  ~s(Engine.Size.L.) + s(Fuel.Consumption.Comb..L.100.km.),
+               data = emissions)
+````
+
+
+#### Interpretacja parametru F, który informuje jaki jest wpływ danej zmiennej objaśniającego na zmienną objaśnianą:
+
+
+s(Engine.Size.L.) 234.1
+
+
+s(Fuel.Consumption.Comb..L.100.km.) 1626.4
+
+
+#### Wielkość spalania w cyklu mieszanym w l/100 km znacznie lepiej przewiduje wielkość emisji CO2/g/km niż pojemność silnika.
+
+````{r echo = FALSE}
+plot(model1, 
+     page = 1,
+     all.terms = T,
+     scheme = 1,
+     residuals = F)
+````
+
+Wykres 1 przedstawia zależność według której wraz ze wzrostem pojemności silnika rosną emisje co2/g/km
+
+
+Wykres 2 zależność według której wraz ze wzrostem spalania w cyklu mieszanym w l/100 rosną emisje co2/g/km
+
+
+Szary kolor wokół linii trendu ilustruje przedział ufności.
+
+#### Wartości miar dopasowania (AIC, GCV) model 1 z wygładzonymi zmiennymi
+
+
+Statystyka GCV dla modelu wynosi:  304.5472 
+
+
+Statystyka AIC dla modelu wynosi:  63193.21
+
+#### Oszacowany model liniowy (Model 1a) z tymi samymi zmiennymi, co w Modelu 1
+````{r echo = TRUE}
+model1a <-  gam(CO2.Emissions.g.km.  ~Engine.Size.L. + Fuel.Consumption.Comb..L.100.km.,
+               data = emissions)
+````
+
+````{r echo = FALSE}
+plot(model1a, 
+     page = 1,
+     all.terms = T,
+     scheme = 1,
+     residuals = F)
+````
+
+
+Podobnie jak w modelu z wygładzonymi zmiennymi wraz ze wzrostem pojemności silnika jak i wzrostem spalania w cyklu mieszanym w l/100 rosną emisje co2/g/km.
+
+
+Statystyka GCV dla modelu wynosi:  433.2874
+
+
+Statystyka AIC dla modelu wynosi:  65797.02
+
+
+Porównując statystyki obu modeli możemy zaobserwować, że model (1) z wygładzonymi zmiennymi jest lepiej dopasowany niż model (1a) liniowy. 
+
+
+Kryterium informacyjne Akaike i GCV w pierwszym modelu osiągnęły niższe wartości.
+
+
+#### Porównanie dokładności predykcji modelu liniowego (model 1) i modelu wygładzonego (model 1a) dzieląc zbiór danych na próbę uczącą i testową.
+
+Podział zbioru na próbę uczącą i testową.
+
+````{r echo = FALSE}
+div<- sample(nrow(emissions), nrow(emissions)/4)
+emissions.test <- emissions[div, ]
+emissions.learn <- emissions[-div, ]
+````
+
+##### Oszacowanie modeli:
+
+````{r echo = TRUE}
+model1.learn <-  gam(CO2.Emissions.g.km. ~ s(Engine.Size.L.) + s(Fuel.Consumption.Comb..L.100.km.),
+                     data = emissions.learn)
+
+model1a.learn <-  gam(CO2.Emissions.g.km. ~ Engine.Size.L. + Fuel.Consumption.Comb..L.100.km.,
+                      data = emissions.learn)
+````
+
+W pierwszym modelu (1) wykorzystano wygładzone zmienne określające pojemność silnika w litrach oraz wielkość zużycia paliwa w l/100km, a w drugim modelu (1a) wykorzystano zwykły model liniowy.
+
+Pierwiastek błędu kwadratowego modelu z wygładzonymi zmiennymi:  329.2305
+
+
+Pierwiastek błędu kwadratowego modelu liniowego:  446.0963
+
+Model z wygładzonymi zmiennymi ma mniejsze błędy prognozowanych danych względem modelu liniowego  niż model liniowy co świadczy o lepszej dokładności predykcji modelu wygładzonego. Model z wygładzonymi zmiennymi lepiej dopasowuje się do określonych danych i lepiej prognozowaniem wartości na podstawie zbioru testowego.
 
 
 **Projekt wykonał: Piotr Żebrowski, Michał Wierucki, grupa: N52-12**

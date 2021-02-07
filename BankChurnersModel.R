@@ -1,4 +1,9 @@
-# m Qualitative variable modeling (classification problem)
+# Qualitative variable modeling (classification problem)
+# data source: https://www.kaggle.com/sakshigoyal7/credit-card-customers
+
+# exploratory data alysis done additionaly in Python at: 
+# https://github.com/pzeb23/Python_code/tree/master/Non-parametric_models
+
 library(tree)
 library(rpart)
 library(rpart.plot)
@@ -7,7 +12,6 @@ library(rpart.plot)
 setwd("~/Projects/AnalysisInR")
 churners <- read.csv("BankChurners.csv")
 
-#spam <- read.csv("/Users/macbook/Downloads/spam.RData")
 ### Podzielić dane losowo na zbiór uczący i zbiór testowy
 
 set.seed(123)
