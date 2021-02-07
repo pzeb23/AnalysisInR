@@ -1,0 +1,115 @@
+---
+title: "Modele parametyczne - projekt"
+author: "Piotr Zebrowski & Michał Wierucki"
+date: "2/7/2021"
+output: html_document
+---
+```{r include=FALSE}
+source("/Users/macbook/Projects/AnalysisInR/BankChurnersModel.R")
+```
+
+---
+title: "Bank churners (odchodzący klienci)"
+output: html_document
+---
+
+Zbiór danych zawiera klientów kart kredytowych oraz ich cechy:
+
+- 
+
+#### Zbiór danych i przykładowe obserwacje
+
+``` {r echo = FALSE, results = 'asis'}
+library(knitr)
+
+kable(head(churners))
+```
+
+#### Problem badawczy
+
+W raporcie zostanie podjęta próba klasyfikacji klientów (zrezygnowanie lub z nie z usługi karty kredytowej) na podstawie wszystkich cech każdego osobnika w zbiorze danych. 
+
+#### Drzewo klasyfikacji
+
+``` {r echo = FALSE, results = 'asis'}
+plot(drzewo.churners0)
+text(drzewo.churners0)
+```
+
+#### Opis
+
+*W drzewie klasyfikacji możemy zaobserwować prawidłowość klasyfikowania klienta na podstawie *
+
+
+#### Podział zbioru na uczący i testowy
+
+
+``` {r echo = TRUE}
+testowe.nr <- sample(x = nrow(churners), size = nrow(churners)/4, replace = F)
+churners.uczacy <- churners[-testowe.nr, ]
+churners.testowy <- churners[testowe.nr, ]
+```
+
+*Funkcja losująca odpowiednie numery obserwacji do zbioru uczącego. Za pomocą funkcji losującej bez zwracania 3/4 zbioru przypisujemy do obiektu uczącego, a 1/4 do zbioru testowego.*
+
+#### Ustalanie parametrów modelu
+
+``` {r echo = TRUE}
+drzewo.churners1 <- rpart(Attrition_Flag ~ ., 
+                         data = churners.uczacy,
+                         control = rpart.control(cp = 0))
+```
+
+*Początkowo drzewo zostało wytworzone z zargumentem cp = 0, następnie poprawność argumentu została zweryfikowana za pomocą funkcji prezentującej wykres cp w naszym modelu drzewa.*
+
+``` {r echo = FALSE, results = 'asis'}
+plotcp(drzewo.churners1)
+```
+
+*Wykres informuje nas, że wskazany wczesniej parametr cp pownien być delikatnie większy. Jego wartość ustalono na 0.005 w dalszych częściach analizy. Porównawczo poniżej zostały przedstawione dwa rysunki drzewa w zależności od wartości parametru cp.*
+
+#### Drzewo dla cp=0:
+
+``` {r echo = FALSE, results = 'asis'}
+prp(drzewo.churners1)
+```
+
+#### Drzewo dla cp=0.005:
+``` {r echo = FALSE, results = 'asis'}
+prp(drzewo.churners2)
+```
+
+#### Znaczenie zmiennych w modelu:
+
+``` {r echo = FALSE, results = 'asis'}
+library(knitr)
+kable(cbind(drzewo.churners2$variable.importance))
+```
+
+*Powyższa tabela uwidacznia poziom istotności konkretnej zmiennej podczas decydowania o klienta do konkretnej grupy (zrezygnowal - nie zrezygnował). Im zmienna wykazuje wyższą wartość w prezentowanym zestawieniu tym bardziej kluczowe znaczenie posiada przy klasyfikacji klientów do odpowiednich podgrup.*
+
+#### Sprawdzanie modelu na zbiorze testowym:
+
+``` {r echo = TRUE}
+predykcje.klasy <- predict(drzewo.churners2, newdata = churners.testowy,
+                           type = "class")
+```
+- **Błąd klasyfikacji: **
+``` {r echo = FALSE, results = 'asis'}
+mean(predykcje.klasy != churners.testowy$Attrition_Flag)
+```
+
+- **Macierz błędnych klasyfikacji: **
+``` {r echo = FALSE, results = 'asis'}
+library(knitr)
+# kable(macierz_klasyfikacji, col.names = c(" Adelie",
+#                                           " Chinstrap",
+#                                           " Gento"))
+```
+
+*W przeważającej większości przypadków klasyfikacja poszczególnych klientów do grup została przeprowadzona poprawnie.*
+
+# Spalanie a emisja CO2
+
+
+**Projekt wykonał: Piotr Żebrowski, Michał Wierucki, grupa: N52-12**

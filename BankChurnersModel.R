@@ -22,27 +22,27 @@ churners.testowy <- churners[testowe.nr, ]
 
 ### Zbudować drzewo klasyfikacyjne (zmienna celu: Spam)
 
-drzewo.churners <- rpart(Attrition_Flag ~ ., 
+drzewo.churners0 <- rpart(Attrition_Flag ~ ., 
                          data = churners.uczacy)
 
-drzewo.churners
-summary(drzewo.churners)
-drzewo.churners$variable.importance
-rpart.rules(drzewo.churners, style = "tallw")
+drzewo.churners0
+summary(drzewo.churners0)
+drzewo.churners0$variable.importance
+rpart.rules(drzewo.churners0, style = "tallw")
 
 # Narysować wykres drzewa
 
-prp(drzewo.churners)
-rpart.plot(drzewo.churners)
+prp(drzewo.churners0)
+rpart.plot(drzewo.churners0)
 # Ustalić optymalne parametry modelu
 
-drzewo.churners <- rpart(Attrition_Flag ~ ., 
+drzewo.churners1 <- rpart(Attrition_Flag ~ ., 
                          data = churners.uczacy,
                          control = rpart.control(cp = 0))
 
-drzewo.churners$cptable
-printcp(drzewo.churners)
-plotcp(drzewo.churners)
+drzewo.churners1$cptable
+printcp(drzewo.churners1)
+plotcp(drzewo.churners1)
 
 # reczne obliczanie, bierzemy wiersz z najmniejszym xerror 
 # a nastepnie dodajemy xerror i xstd tego wiersza
@@ -55,15 +55,15 @@ plotcp(drzewo.churners)
 
 # bierzemy jego CP = 0.00500417 i podstawiamy do modelu
 
-drzewo.churners <- rpart(Attrition_Flag ~ ., 
+drzewo.churners2 <- rpart(Attrition_Flag ~ ., 
                          data = churners.uczacy,
                          control = rpart.control(cp = 0.00500417))
 
-drzewo.churners$cptable
-printcp(drzewo.churners)
+drzewo.churners2$cptable
+printcp(drzewo.churners2)
 
 # drugi raz plot cp, nadal 2 sa pod kreska
-plotcp(drzewo.churners)
+plotcp(drzewo.churners2)
 # wiec mozna by jeszcze przyciac
 
 # reczne obliczanie
@@ -78,13 +78,13 @@ plotcp(drzewo.churners)
 #
 # bierzemy jego CP i podstawiamy do modelu:
 
-drzewo.churners <- rpart(Attrition_Flag ~ ., 
+drzewo.churners3 <- rpart(Attrition_Flag ~ ., 
                          data = churners.uczacy,
                          control = rpart.control(cp = 0.005))
 
-drzewo.churners$cptable
-printcp(drzewo.churners)
-plotcp(drzewo.churners)
+drzewo.churners3$cptable
+printcp(drzewo.churners3)
+plotcp(drzewo.churners3)
 
 
 # Dalsze przycinanie nie przyniosło lepszych efektów
@@ -100,14 +100,14 @@ plotcp(drzewo.churners)
 
 # Odczytać ważność zmiennych
 
-drzewo.churners$variable.importance
-cbind(drzewo.churners$variable.importance)
-dotchart(sort(drzewo.churners$variable.importance, decreasing = F),
+drzewo.churners3$variable.importance
+cbind(drzewo.churners3$variable.importance)
+dotchart(sort(drzewo.churners3$variable.importance, decreasing = F),
          pch = 16)
 
 # Sprawdzić dokładność modelu na zbiorze testowym
 
-predykcje.klasy <- predict(drzewo.churners, newdata = churners.testowy,
+predykcje.klasy <- predict(drzewo.churners3, newdata = churners.testowy,
                            type = "class")
 
 mean(predykcje.klasy != churners.testowy$Attrition_Flag)
@@ -116,9 +116,10 @@ mean(predykcje.klasy != churners.testowy$Attrition_Flag)
 table(Rzeczywiste = churners.testowy$Attrition_Flag,
       Przewidywane = predykcje.klasy)
 
-predykcje.prob <- predict(drzewo.churners, newdata = churners.testowy,
+predykcje.prob <- predict(drzewo.churners3, newdata = churners.testowy,
                            type = "prob")
 head(predykcje.prob)
 
 hist(predykcje.prob[churners.testowy$Attrition_Flag == "Attrited Customer", 
                     "Attrited Customer"])
+
