@@ -79,7 +79,7 @@ rpart.plot(drzewo.churners0)
 
 #### Opis
 
-*W drzewie klasyfikacji możemy zaobserwować prawidłowość klasyfikowania klienta na podstawie łącznej liczby transakcji (Total_Trans_Ct). Następne w kolejności, zmiennymi najlepiej dyskryminującymi są "Łączna kwota transakcji" (Total_Trans_Amt) oraz "Łączna kwota transakcji" (Total_Trans_Amt). *
+*W drzewie klasyfikacji możemy zaobserwować prawidłowość klasyfikowania klienta na podstawie łącznej liczby transakcji (Total_Trans_Ct). Następne w kolejności, zmiennymi najlepiej dyskryminującymi są "Łączna kwota transakcji" (Total_Trans_Amt) oraz "całkowity obrót na karcie kredytowej" (Total_Revolving_Bal). *
 
 
 #### Podział zbioru na uczący i testowy
