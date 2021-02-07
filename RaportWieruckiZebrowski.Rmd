@@ -5,7 +5,7 @@ date: "2/7/2021"
 output: html_document
 ---
 ```{r include=FALSE}
-source("/Users/macbook/Projects/AnalysisInR/BankChurnersModel.R")
+source("BankChurnersModel.R")
 ```
 
 ---
@@ -15,7 +15,45 @@ output: html_document
 
 Zbiór danych zawiera klientów kart kredytowych oraz ich cechy:
 
-- 
+- Attrition_Flag: Przyjmuje 2 wartości: “Existing Customer” oraz “Attrited Customer” w zależności od tego, czy klient zrezygnował z usługi, zmienna jakościowa dychotomiczna 
+ 
+- Customer_Age: Wiek klienta w latach, zmienna ilościowa 
+ 
+- Gender: zmienna jakościowa dychotomiczna okreslająca płeć 
+ 
+- Dependent_count: liczba osób na utrzymaniu, zmienna ilościowa 
+ 
+- Education_Level: poziom edukacji, zmienna jakościowa 
+ 
+- Marital_Status: stan cywilny, zmienna jakościowa dychotomiczna 
+ 
+- Income_Category: roczne dochody w USD w przedziałach 
+ 
+- Card_Category: rodzaj karty kredytowej, zmienna jakościowa 
+ 
+- Months_on_book: liczba miesięcy jako klient banku, zmienna ilościowa 
+ 
+- Total_Relationship_Count: liczba wszystkich produktów banku danego klienta, zmienna ilościowa 
+ 
+- Months_Inactive_12_mon: liczba miesięcy podczas których klient był niekatywny w ciągu ostatnich 12 miesięcy, zmienna ilościowa 
+ 
+- Contacts_Count_12_mon: liczba podpisanych kontraktów (umów) przez kliena w ciągu ostatnich 12 miesięcy, zmienna ilościowa 
+ 
+- Credit_Limit: wielkość limitu na karcie kredytowej, zmienna ilościowa 
+ 
+- Total_Revolving_Bal: całkowity obrót na karcie kredytowej, zmienna ilościowa 
+ 
+- Avg_Open_To_Buy: ? 
+ 
+- Total_Amt_Chng_Q4_Q1: Zmiana w kwotach transakcji, od 4. do 1. kwartału, zmienna ilościowa 
+ 
+- Total_Trans_Amt: Łączna kwota transakcji, zmienna ilościowa 
+ 
+- Total_Trans_Ct: Łaczna liczba transakcji, zmienna ilościowa 
+ 
+- Total_Ct_Chng_Q4_Q1: Zmiana liczby transkacji, zmienna ilościowa 
+ 
+- Avg_Utilization_Ratio: Współczynnik wykorzystania karty, wartości od 0 do 1, zmienna ilościowa 
 
 #### Zbiór danych i przykładowe obserwacje
 
@@ -27,18 +65,20 @@ kable(head(churners))
 
 #### Problem badawczy
 
+Menedżer w banku jest zaniepokojony tym, że coraz więcej klientów rezygnuje z obsługi kart kredytowych. Dużym udogodnieniem byłaby możliwość przewidzenia, który klient zrezygnuje, aby można było proaktywnie udać się do klienta, aby zapewnić mu lepsze usługi i zmienić ich decyzję o rezygnacji z usługi.   
+
 W raporcie zostanie podjęta próba klasyfikacji klientów (zrezygnowanie lub z nie z usługi karty kredytowej) na podstawie wszystkich cech każdego osobnika w zbiorze danych. 
+
 
 #### Drzewo klasyfikacji
 
 ``` {r echo = FALSE, results = 'asis'}
-plot(drzewo.churners0)
-text(drzewo.churners0)
+rpart.plot(drzewo.churners0)
 ```
 
 #### Opis
 
-*W drzewie klasyfikacji możemy zaobserwować prawidłowość klasyfikowania klienta na podstawie *
+*W drzewie klasyfikacji możemy zaobserwować prawidłowość klasyfikowania klienta na podstawie łącznej liczby transakcji (Total_Trans_Ct). Następne w kolejności, zmiennymi najlepiej dysryminującymi są "Łączna kwota transakcji" (Total_Trans_Amt) oraz "Łączna kwota transakcji" (Total_Trans_Amt). *
 
 
 #### Podział zbioru na uczący i testowy
@@ -76,8 +116,14 @@ prp(drzewo.churners1)
 
 #### Drzewo dla cp=0.005:
 ``` {r echo = FALSE, results = 'asis'}
-prp(drzewo.churners2)
+prp(drzewo.churners3)
 ```
+
+``` {r echo = FALSE, results = 'asis'}
+plotcp(drzewo.churners3)
+```
+
+*Dla parametru cp = 0.005 na wykresie widać dużą poprawę modelu w stosunku do wartości cp = 0. *
 
 #### Znaczenie zmiennych w modelu:
 
@@ -86,7 +132,12 @@ library(knitr)
 kable(cbind(drzewo.churners2$variable.importance))
 ```
 
-*Powyższa tabela uwidacznia poziom istotności konkretnej zmiennej podczas decydowania o klienta do konkretnej grupy (zrezygnowal - nie zrezygnował). Im zmienna wykazuje wyższą wartość w prezentowanym zestawieniu tym bardziej kluczowe znaczenie posiada przy klasyfikacji klientów do odpowiednich podgrup.*
+*Powyższa tabela uwidacznia poziom istotności konkretnej zmiennej podczas decydowania o klienta do konkretnej grupy (zrezygnowal - nie zrezygnował). Im zmienna wykazuje wyższą wartość w prezentowanym zestawieniu tym bardziej kluczowe znaczenie posiada przy klasyfikacji klientów do odpowiednich podgrup. Wyniki powyższej tabeli zostały także zobrazowane na poniższym wykresie. *
+
+``` {r echo = FALSE, results = 'asis'}
+dotchart(sort(drzewo.churners3$variable.importance, decreasing = F),
+         pch = 16)
+```
 
 #### Sprawdzanie modelu na zbiorze testowym:
 
@@ -99,17 +150,19 @@ predykcje.klasy <- predict(drzewo.churners2, newdata = churners.testowy,
 mean(predykcje.klasy != churners.testowy$Attrition_Flag)
 ```
 
-- **Macierz błędnych klasyfikacji: **
+#### Histogram błędnych klasyfikacji
 ``` {r echo = FALSE, results = 'asis'}
-library(knitr)
-# kable(macierz_klasyfikacji, col.names = c(" Adelie",
-#                                           " Chinstrap",
-#                                           " Gento"))
+predykcje.prob <- predict(drzewo.churners3, newdata = churners.testowy,
+                           type = "prob")
+hist(predykcje.prob[churners.testowy$Attrition_Flag == "Attrited Customer", 
+                    "Attrited Customer"])
 ```
 
-*W przeważającej większości przypadków klasyfikacja poszczególnych klientów do grup została przeprowadzona poprawnie.*
+*Błąd klasyfikacji na poziomie 0.06124062 oznacza, że w przeważającej większości przypadków klasyfikacja poszczególnych klientów do grup została przeprowadzona poprawnie.*
 
-# Spalanie a emisja CO2
+
+
+# Wpływ spalania i wielkości silnika na emisję CO2
 
 
 **Projekt wykonał: Piotr Żebrowski, Michał Wierucki, grupa: N52-12**

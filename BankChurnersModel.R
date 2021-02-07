@@ -4,7 +4,7 @@ library(rpart)
 library(rpart.plot)
 
 ### Załadowanie danych
-
+setwd("~/Projects/AnalysisInR")
 churners <- read.csv("BankChurners.csv")
 
 #spam <- read.csv("/Users/macbook/Downloads/spam.RData")
