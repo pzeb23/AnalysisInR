@@ -16,3 +16,5 @@ summary(drzewo)
 
 plot(drzewo) # same gałęzie
 text(drzewo)
+
+colnames(churners)

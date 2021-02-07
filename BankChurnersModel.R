@@ -3,7 +3,7 @@ library(tree)
 library(rpart)
 library(rpart.plot)
 
-### Załadować dane spam.RData
+### Załadowanie danych
 
 churners <- read.csv("BankChurners.csv")
 
