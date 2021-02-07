@@ -3,12 +3,12 @@ library(tree)
 library(rpart)
 library(rpart.plot)
 
-myData1 <- read.csv("/Users/macbook/Projects/AnalysisInR/BankChurners.csv")
+churners <- read.csv("BankChurners.csv")
 
-table(myData1$Attrition_Flag)
+table(churners$Attrition_Flag)
 
 drzewo <- tree(Attrition_Flag ~., 
-               data = myData1,
+               data = churners,
                split = "deviance")
 
 drzewo
